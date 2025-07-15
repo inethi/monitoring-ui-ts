@@ -1,6 +1,6 @@
-# monitoring-ui-ts
+# iNethi Monitoring System
 
-Locally hosted monitoring UI in Typescript
+A dashboard for network managers to register/login, create networks, and assign devices, using a cloud API or local mock data.
 
 ## Getting Started
 
