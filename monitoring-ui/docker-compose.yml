@@ -1,0 +1,21 @@
+services:
+  ui:
+    container_name: inethi-monitoring-ui
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.local
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.monitoring-ui.rule=Host(`monitoring.inethilocal.net`)"
+      - "traefik.http.routers.monitoring-ui.entrypoints=websecure"
+
+networks:
+  default:
+    external:
+      name: "inethi-bridge-traefik"

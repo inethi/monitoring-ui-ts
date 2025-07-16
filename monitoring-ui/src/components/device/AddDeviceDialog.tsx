@@ -25,13 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ButtonLoading from "@/components/ui/ButtonLoading";
+import { toast } from "sonner";
 
 interface AddDeviceDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  setShowToast: (show: boolean) => void;
-  setToastType: (type: "success" | "error") => void;
-  setToastMessage: (msg: string) => void;
   onDeviceAdded: () => void | Promise<void>;
 }
 
@@ -50,9 +48,6 @@ function isValidMac(mac: string) {
 export function AddDeviceDialog({
   open,
   setOpen,
-  setShowToast,
-  setToastType,
-  setToastMessage,
   onDeviceAdded,
 }: AddDeviceDialogProps) {
   const [name, setName] = useState("");
@@ -106,9 +101,10 @@ export function AddDeviceDialog({
       };
       await createDevice(payload);
       setOpen(false); // Close dialog first
-      setToastType("success");
-      setToastMessage(`Device '${name || ipAddress}' was added successfully.`);
-      setShowToast(true);
+      toast.success(`Device '${name || ipAddress}' was added successfully.`, {
+        action: { label: "Close", onClick: () => {} },
+        richColors: true,
+      });
       if (onDeviceAdded) await onDeviceAdded();
       // reset form fields
       setName("");
@@ -118,9 +114,10 @@ export function AddDeviceDialog({
       setNetwork(networks.length > 0 ? networks[0].id : null);
     } catch (err: any) {
       setError(err?.message || "Failed to add device");
-      setToastType("error");
-      setToastMessage(err?.message || "Failed to add device");
-      setShowToast(true);
+      toast.error(err?.message || "Failed to add device", {
+        action: { label: "Close", onClick: () => {} },
+        richColors: true,
+      });
     } finally {
       setLoading(false);
     }

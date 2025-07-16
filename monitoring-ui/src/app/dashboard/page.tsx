@@ -40,9 +40,6 @@ const Dashboard = () => {
   const [networksLoading, setNetworksLoading] = useState(true);
 
   // Toast and dialog state
-  const [showToast, setShowToast] = useState(false);
-  const [toastType, setToastType] = useState<"success" | "error">("success");
-  const [toastMessage, setToastMessage] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -96,22 +93,6 @@ const Dashboard = () => {
     setNetworksLoading(false);
   };
 
-  // Show toast when showToast is set
-  useEffect(() => {
-    if (showToast) {
-      toastType === "success"
-        ? toast.success(toastMessage, {
-            action: { label: "Close", onClick: () => {} },
-            richColors: true,
-          })
-        : toast.error(toastMessage, {
-            action: { label: "Close", onClick: () => {} },
-            richColors: true,
-          });
-      setShowToast(false); // Reset after showing
-    }
-  }, [showToast, toastType, toastMessage]);
-
   // Callback to refresh devices after add/edit/delete
   const refreshDevices = async () => {
     const devices = await fetchDevices();
@@ -148,17 +129,38 @@ const Dashboard = () => {
     setEditLoading(true);
     try {
       await updateDevice(selectedDevice.id, editForm);
-      setToastType("success");
-      setToastMessage("Device updated successfully.");
-      setShowToast(true);
+      toast.success("Device updated successfully.", {
+        action: { label: "Close", onClick: () => {} },
+        richColors: true,
+      });
       setEditDialogOpen(false);
       setEditError(null);
       await refreshDevices();
     } catch (err: any) {
-      setToastType("error");
-      setToastMessage(err?.message || "Failed to update device");
-      setShowToast(true);
-      setEditDialogOpen(false);
+      console.log("[handleEditSubmit] err", err);
+      // Try to extract backend validation errors
+      const macError =
+        err?.response?.data?.mac_address?.[0] || err?.mac_address?.[0]; // fallback if structure is different
+
+      if (macError && macError.includes("already exists")) {
+        setEditError(
+          "The MAC address provided is already assigned to another device."
+        );
+        toast.error(
+          "The MAC address provided is already assigned to another device.",
+          {
+            action: { label: "Close", onClick: () => {} },
+            richColors: true,
+          }
+        );
+        // Do not close the dialog, let the user fix the error
+      } else {
+        toast.error(err?.message || "Failed to update device", {
+          action: { label: "Close", onClick: () => {} },
+          richColors: true,
+        });
+        setEditDialogOpen(false);
+      }
     } finally {
       setEditLoading(false);
     }
@@ -174,15 +176,17 @@ const Dashboard = () => {
     setDeleteLoading(true);
     try {
       await deleteDevice(selectedDevice.id);
-      setToastType("success");
-      setToastMessage("Device deleted successfully.");
-      setShowToast(true);
+      toast.success("Device deleted successfully.", {
+        action: { label: "Close", onClick: () => {} },
+        richColors: true,
+      });
       setDeleteDialogOpen(false);
       await refreshDevices();
     } catch (err: any) {
-      setToastType("error");
-      setToastMessage(err?.message || "Failed to delete device");
-      setShowToast(true);
+      toast.error(err?.message || "Failed to delete device", {
+        action: { label: "Close", onClick: () => {} },
+        richColors: true,
+      });
       setDeleteDialogOpen(false);
     } finally {
       setDeleteLoading(false);
@@ -204,9 +208,17 @@ const Dashboard = () => {
           <CreateNetworkForm
             onCreated={handleNetworkCreated}
             onToast={({ type, message }) => {
-              setToastType(type);
-              setToastMessage(message);
-              setShowToast(true);
+              if (type === "success") {
+                toast.success(message, {
+                  action: { label: "Close", onClick: () => {} },
+                  richColors: true,
+                });
+              } else {
+                toast.error(message, {
+                  action: { label: "Close", onClick: () => {} },
+                  richColors: true,
+                });
+              }
             }}
           />
         </div>
@@ -225,9 +237,6 @@ const Dashboard = () => {
         <AddDeviceDialog
           open={dialogOpen}
           setOpen={setDialogOpen}
-          setShowToast={setShowToast}
-          setToastType={setToastType}
-          setToastMessage={setToastMessage}
           onDeviceAdded={refreshDevices}
         />
       </div>
