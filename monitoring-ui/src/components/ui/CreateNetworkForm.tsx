@@ -14,6 +14,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { createNetwork } from "@/lib/networkEndpoints";
+import ButtonLoading from "@/components/ui/ButtonLoading";
+
+type ToastType = "success" | "error";
+
+interface CreateNetworkFormProps {
+  onCreated: () => void;
+  onToast: (opts: { type: ToastType; message: string }) => void;
+}
 
 const FormSchema = z.object({
   name: z.string().min(2, {
@@ -23,7 +31,7 @@ const FormSchema = z.object({
 
 type FormSchemaType = z.infer<typeof FormSchema>;
 
-const CreateNetworkForm = ({ onCreated }: { onCreated: () => void }) => {
+const CreateNetworkForm = ({ onCreated, onToast }: CreateNetworkFormProps) => {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const form = useForm<FormSchemaType>({
@@ -36,16 +44,21 @@ const CreateNetworkForm = ({ onCreated }: { onCreated: () => void }) => {
     setSubmitError(null);
     try {
       await createNetwork({ name: data.name });
-      {
-        /* TODO: Add sonner toast success message */
-      }
+      onToast({
+        type: "success",
+        message: `Network '${data.name}' created successfully!`,
+      });
       form.reset();
       onCreated();
     } catch (err: any) {
-      {
-        /* TODO: Add sonner toast fail message */
-      }
-      setSubmitError(err?.message || "Failed to create network");
+      const msg =
+        err?.message ||
+        "Failed to create network. Ensure you are providing a unique network name";
+      setSubmitError(msg);
+      onToast({
+        type: "error",
+        message: msg,
+      });
     }
     setLoading(false);
   }
@@ -69,13 +82,17 @@ const CreateNetworkForm = ({ onCreated }: { onCreated: () => void }) => {
             </FormItem>
           )}
         />
-        {submitError && (
+        {/* {submitError && (
           <div className="text-destructive text-sm">{submitError}</div>
-        )}
+        )} */}
         {/* TODO: Add loading button */}
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Creating..." : "Create Network"}
-        </Button>
+        {loading ? (
+          <ButtonLoading className="w-full" />
+        ) : (
+          <Button type="submit" className="w-full" disabled={loading}>
+            Create Network
+          </Button>
+        )}
       </form>
     </Form>
   );

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,9 +24,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ButtonLoading from "@/components/ui/ButtonLoading";
 
-export function AddDeviceDialog() {
-  const [open, setOpen] = useState(false);
+interface AddDeviceDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  setShowToast: (show: boolean) => void;
+  setToastType: (type: "success" | "error") => void;
+  setToastMessage: (msg: string) => void;
+  onDeviceAdded: () => void | Promise<void>;
+}
+
+function isValidIp(ip: string) {
+  // IPv4 regex
+  return /^(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(\.(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])){3}$/.test(
+    ip
+  );
+}
+
+function isValidMac(mac: string) {
+  // MAC address regex (accepts : or -)
+  return /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(mac);
+}
+
+export function AddDeviceDialog({
+  open,
+  setOpen,
+  setShowToast,
+  setToastType,
+  setToastMessage,
+  onDeviceAdded,
+}: AddDeviceDialogProps) {
   const [name, setName] = useState("");
   const [ipAddress, setIpAddress] = useState("");
   const [macAddress, setMacAddress] = useState("");
@@ -57,6 +84,16 @@ export function AddDeviceDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!isValidIp(ipAddress)) {
+      setError("Please enter a valid IPv4 address (e.g. 192.168.1.1)");
+      return;
+    }
+    if (macAddress && !isValidMac(macAddress)) {
+      setError("Please enter a valid MAC address (e.g. AA:BB:CC:DD:EE:FF)");
+      return;
+    }
+
     setLoading(true);
     try {
       if (!network) throw new Error("Please select a network");
@@ -68,21 +105,22 @@ export function AddDeviceDialog() {
         network: network,
       };
       await createDevice(payload);
-      {
-        /* TODO: Add sonner toast */
-      }
-      toast("Device created", {
-        description: `Device '${name || ipAddress}' was added successfully.`,
-      });
-
+      setOpen(false); // Close dialog first
+      setToastType("success");
+      setToastMessage(`Device '${name || ipAddress}' was added successfully.`);
+      setShowToast(true);
+      if (onDeviceAdded) await onDeviceAdded();
+      // reset form fields
       setName("");
       setIpAddress("");
       setMacAddress("");
       setDeviceType("unknown");
       setNetwork(networks.length > 0 ? networks[0].id : null);
-      setOpen(false);
     } catch (err: any) {
       setError(err?.message || "Failed to add device");
+      setToastType("error");
+      setToastMessage(err?.message || "Failed to add device");
+      setShowToast(true);
     } finally {
       setLoading(false);
     }
@@ -163,7 +201,7 @@ export function AddDeviceDialog() {
           <div className="grid gap-3">
             <Label htmlFor="network">Network</Label>
             <Select
-              value={network !== null ? String(network) : undefined}
+              value={network !== null ? String(network) : ""}
               onValueChange={(val) => setNetwork(Number(val))}
               disabled={networks.length === 0}
             >
@@ -184,15 +222,23 @@ export function AddDeviceDialog() {
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" type="button">
-                Cancel
-              </Button>
-            </DialogClose>
-            {/* TODO: Add loading button */}
-            <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Save changes"}
+            <Button
+              variant="outline"
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                if (!loading) setOpen(false);
+              }}
+            >
+              Cancel
             </Button>
+            {loading ? (
+              <ButtonLoading />
+            ) : (
+              <Button type="submit" disabled={loading}>
+                Save changes
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

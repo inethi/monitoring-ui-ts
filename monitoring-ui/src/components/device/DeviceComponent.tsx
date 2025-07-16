@@ -20,7 +20,17 @@ function translateDeviceType(type: string) {
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
-const DeviceComponent = ({ device }: { device: Device }) => {
+interface DeviceComponentProps {
+  device: Device;
+  onEdit: (device: Device) => void;
+  onDelete: (device: Device) => void;
+}
+
+const DeviceComponent = ({
+  device,
+  onEdit,
+  onDelete,
+}: DeviceComponentProps) => {
   return (
     <Card>
       <CardHeader>
@@ -28,10 +38,18 @@ const DeviceComponent = ({ device }: { device: Device }) => {
         <CardDescription>{device.ip_address}</CardDescription>
         <CardAction>
           <div className="flex gap-2">
-            <Button variant="secondary" size="icon">
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={() => onEdit(device)}
+            >
               <Pencil />
             </Button>
-            <Button variant="destructive" size="icon">
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => onDelete(device)}
+            >
               <Trash />
             </Button>
           </div>
