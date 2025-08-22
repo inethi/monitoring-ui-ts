@@ -28,7 +28,7 @@ export const fetchNetworks = async () => {
       throw error.response ? error.response.data : new Error("Network error");
     }
   } else {
-    const data = await import("../../_data/networks.json");
+    const data = await import("../data/networks.json");
     await new Promise((resolve) => setTimeout(resolve, 500));
     return data.default;
   }

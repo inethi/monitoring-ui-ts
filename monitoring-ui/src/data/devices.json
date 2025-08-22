@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Router-01",
+    "ip_address": "192.168.1.1",
+    "mac_address": "00:11:22:33:44:55",
+    "user": null,
+    "device_type": "switch",
+    "network": 1,
+    "cloud_pk": null
+  },
+  {
+    "id": 2,
+    "name": "Switch-01",
+    "ip_address": "192.168.1.2",
+    "mac_address": "00:11:22:33:44:66",
+    "user": null,
+    "device_type": "switch",
+    "network": 1,
+    "cloud_pk": null
+  },
+  {
+    "id": 3,
+    "name": "Server-01",
+    "ip_address": "192.168.1.10",
+    "mac_address": "00:11:22:33:44:77",
+    "user": null,
+    "device_type": "server",
+    "network": 1,
+    "cloud_pk": null
+  },
+  {
+    "id": 4,
+    "name": "Firewall-01",
+    "ip_address": "192.168.1.254",
+    "mac_address": "00:11:22:33:44:88",
+    "user": null,
+    "device_type": "firewall",
+    "network": 1,
+    "cloud_pk": null
+  }
+]

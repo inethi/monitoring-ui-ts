@@ -31,7 +31,7 @@ export const fetchDevices = async (): Promise<Device[]> => {
       throw error.response ? error.response.data : new Error("Network error");
     }
   } else {
-    const data = await import("../../_data/devices.json");
+    const data = await import("../data/devices.json");
     await new Promise((resolve) => setTimeout(resolve, 500));
     return data.default as Device[];
   }
