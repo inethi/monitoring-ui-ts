@@ -12,10 +12,10 @@ services:
       - .env.local
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.monitoring-ui.rule=Host(`monitoring.inethilocal.net`)"
-      - "traefik.http.routers.monitoring-ui.entrypoints=websecure"
+      - "traefik.http.routers.monitoring-ui.rule=Host(`${TRAEFIK_HOST}`)"
+      - "traefik.http.routers.monitoring-ui.entrypoints=${TRAEFIK_ENTRYPOINTS}"
 
 networks:
   default:
     external:
-      name: "inethi-bridge-traefik"
+      name: "${TRAEFIK_NETWORK_BRIDGE}"

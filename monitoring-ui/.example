@@ -1,2 +1,7 @@
 NEXT_PUBLIC_BACKEND=true # Set to false to use local data
 NEXT_PUBLIC_API_BASE_URL=http://10.10.10.2:8100/api/v1
+
+# Traefik Configuration
+TRAEFIK_HOST=monitoring.inethilocal.net
+TRAEFIK_ENTRYPOINTS=websecure
+TRAEFIK_NETWORK_BRIDGE=inethi-bridge-traefik
