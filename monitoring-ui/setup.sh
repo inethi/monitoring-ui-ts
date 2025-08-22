@@ -103,42 +103,107 @@ fi
 
 print_color $GREEN "✓ Docker Compose permissions are correct"
 
+# Check if .env file exists (for Docker Compose)
+if [ ! -f ".env" ]; then
+    print_color $YELLOW ".env file not found. Creating from .example..."
+    
+    if [ -f ".example" ]; then
+        cp .example .env
+        print_color $GREEN "✓ Created .env from .example"
+    else
+        print_color $RED "Error: .example file not found!"
+        print_color $YELLOW "Creating basic .env file..."
+        cat > .env << EOF
+# Traefik Configuration (defaults)
+TRAEFIK_HOST=monitoring.inethilocal.net
+TRAEFIK_ENTRYPOINTS=websecure
+TRAEFIK_NETWORK_BRIDGE=inethi-bridge-traefik
+
+# Next.js Configuration
+NEXT_PUBLIC_BACKEND=true
+NEXT_PUBLIC_API_BASE_URL=https://monitoring-backend.inethilocal.net/api/v1
+EOF
+        print_color $GREEN "✓ Created basic .env file"
+    fi
+else
+    print_color $GREEN "✓ .env file found"
+fi
+
 # Check if .env.local file exists
 if [ ! -f ".env.local" ]; then
-    print_color $RED "Error: .env.local file not found!"
-    print_color $RED "Please create a .env.local file based on .example before running this script."
-    print_color $YELLOW "Required variables include:"
-    print_color $YELLOW "- NEXT_PUBLIC_BACKEND"
-    print_color $YELLOW "- NEXT_PUBLIC_API_BASE_URL"
-    print_color $YELLOW "- TRAEFIK_HOST"
-    print_color $YELLOW "- TRAEFIK_ENTRYPOINTS"
-    print_color $YELLOW "- TRAEFIK_NETWORK_BRIDGE"
-    exit 1
+    print_color $YELLOW ".env.local file not found. Creating from .example..."
+    
+    if [ -f ".example" ]; then
+        cp .example .env.local
+        print_color $GREEN "✓ Created .env.local from .example"
+    else
+        print_color $RED "Error: .example file not found!"
+        print_color $YELLOW "Creating basic .env.local file..."
+        cat > .env.local << EOF
+NEXT_PUBLIC_BACKEND=true
+NEXT_PUBLIC_API_BASE_URL=https://monitoring-backend.inethilocal.net/api/v1
+
+# Traefik Configuration
+TRAEFIK_HOST=monitoring.inethilocal.net
+TRAEFIK_ENTRYPOINTS=websecure
+TRAEFIK_NETWORK_BRIDGE=inethi-bridge-traefik
+EOF
+        print_color $GREEN "✓ Created basic .env.local file"
+    fi
+else
+    print_color $GREEN "✓ .env.local file found"
 fi
 
 print_color $GREEN "✓ .env.local file found"
 
-# Display and confirm .env.local file
+# Display and confirm environment files
 print_header "Environment Configuration Review"
-print_color $CYAN "About to display your .env.local file contents..."
-print_color $YELLOW "Press Enter to continue and view the .env.local file..."
+print_color $CYAN "About to display your environment file contents..."
+print_color $YELLOW "Press Enter to continue and view the environment files..."
 read -r
 
-print_color $YELLOW "Current .env.local file contents:"
+print_color $YELLOW "Current .env file contents (for Docker Compose):"
+echo
+cat .env
+echo
+
+print_color $YELLOW "Current .env.local file contents (for Next.js):"
 echo
 cat .env.local
 echo
 
-read -p "$(print_color $CYAN "Are you happy with the .env.local configuration? (y/N): ")" -r
+read -p "$(print_color $CYAN "Are you happy with the environment configuration? (y/N): ")" -r
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    print_color $YELLOW "Please update your .env.local file and run the script again."
+    print_color $YELLOW "Please update your environment files and run the script again."
     exit 0
 fi
 
-# Basic validation of .env.local file
-print_color $BLUE "Validating .env.local file..."
+# Basic validation of environment files
+print_color $BLUE "Validating environment files..."
 
-required_vars=("NEXT_PUBLIC_BACKEND" "NEXT_PUBLIC_API_BASE_URL" "TRAEFIK_HOST" "TRAEFIK_ENTRYPOINTS" "TRAEFIK_NETWORK_BRIDGE")
+# Check .env file (for Docker Compose)
+print_color $BLUE "Validating .env file..."
+required_vars=("TRAEFIK_HOST" "TRAEFIK_ENTRYPOINTS" "TRAEFIK_NETWORK_BRIDGE")
+
+for var in "${required_vars[@]}"; do
+    if ! grep -q "^${var}=" .env; then
+        print_color $RED "Error: Required variable $var not found in .env file"
+        exit 1
+    fi
+
+    # Check if variable has a value
+    value=$(grep "^${var}=" .env | cut -d'=' -f2-)
+    if [ -z "$value" ] || [ "$value" = "your_value_here" ] || [ "$value" = "changeme" ]; then
+        print_color $RED "Error: Variable $var appears to have a placeholder value in .env file. Please set a real value."
+        exit 1
+    fi
+done
+
+print_color $GREEN "✓ .env file validation passed"
+
+# Check .env.local file (for Next.js)
+print_color $BLUE "Validating .env.local file..."
+required_vars=("NEXT_PUBLIC_BACKEND" "NEXT_PUBLIC_API_BASE_URL")
 
 for var in "${required_vars[@]}"; do
     if ! grep -q "^${var}=" .env.local; then
@@ -149,7 +214,7 @@ for var in "${required_vars[@]}"; do
     # Check if variable has a value
     value=$(grep "^${var}=" .env.local | cut -d'=' -f2-)
     if [ -z "$value" ] || [ "$value" = "your_value_here" ] || [ "$value" = "changeme" ]; then
-        print_color $RED "Error: Variable $var appears to have a placeholder value. Please set a real value."
+        print_color $RED "Error: Variable $var appears to have a placeholder value in .env.local file. Please set a real value."
         exit 1
     fi
 done
@@ -227,7 +292,7 @@ if docker compose ps 2>/dev/null || docker-compose ps 2>/dev/null; then
     echo
     print_color $CYAN "You can now access:"
     print_color $YELLOW "- Local Access: http://localhost:3000"
-    print_color $YELLOW "- Traefik URL: https://$(grep "^TRAEFIK_HOST=" .env.local | cut -d'=' -f2)"
+    print_color $YELLOW "- Traefik URL: https://$(grep "^TRAEFIK_HOST=" .env | cut -d'=' -f2)"
     echo
     print_color $BLUE "To view logs, use:"
     print_color $YELLOW "  docker compose logs -f ui"
