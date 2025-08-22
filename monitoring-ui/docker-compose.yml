@@ -12,7 +12,7 @@ services:
       - .env.local
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.monitoring-ui.rule=Host(${TRAEFIK_HOST:-monitoring.inethilocal.net})"
+      - "traefik.http.routers.monitoring-ui.rule=Host(`${TRAEFIK_HOST:-monitoring.inethilocal.net}`)"
       - "traefik.http.routers.monitoring-ui.entrypoints=${TRAEFIK_ENTRYPOINTS:-websecure}"
 
 networks:
