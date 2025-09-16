@@ -24,13 +24,18 @@ export const fetchDevices = async (): Promise<Device[]> => {
   const useBackend = process.env.NEXT_PUBLIC_BACKEND !== "false";
   if (useBackend) {
     try {
+      console.log("[deviceEndpoints] Fetching devices from backend...");
       const axiosInstance = createAxiosInstanceWithToken();
       const response = await axiosInstance.get<Device[]>("/hosts/");
+      console.log("[deviceEndpoints] Devices response:", response.data);
       return response.data;
     } catch (error: any) {
+      console.error("[deviceEndpoints] Error fetching devices:", error);
+      console.error("[deviceEndpoints] Error response:", error.response?.data);
       throw error.response ? error.response.data : new Error("Network error");
     }
   } else {
+    console.log("[deviceEndpoints] Using local data...");
     const data = await import("../data/devices.json");
     await new Promise((resolve) => setTimeout(resolve, 500));
     return data.default as Device[];

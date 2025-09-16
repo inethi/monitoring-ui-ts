@@ -21,13 +21,18 @@ export const fetchNetworks = async () => {
   const useBackend = process.env.NEXT_PUBLIC_BACKEND !== "false";
   if (useBackend) {
     try {
+      console.log("[networkEndpoints] Fetching networks from backend...");
       const axiosInstance = createAxiosInstanceWithToken();
       const response = await axiosInstance.get("/networks/");
+      console.log("[networkEndpoints] Networks response:", response.data);
       return response.data;
     } catch (error: any) {
+      console.error("[networkEndpoints] Error fetching networks:", error);
+      console.error("[networkEndpoints] Error response:", error.response?.data);
       throw error.response ? error.response.data : new Error("Network error");
     }
   } else {
+    console.log("[networkEndpoints] Using local data...");
     const data = await import("../data/networks.json");
     await new Promise((resolve) => setTimeout(resolve, 500));
     return data.default;

@@ -27,19 +27,31 @@ export const loginUser = async (
         password,
       }
     );
+
+    console.log("[auth] Login response:", response.data);
+
     // Store the correct token
     const { local_token, cloud_token, token } = response.data as any;
+    let storedToken = "";
+
     if (local_token) {
       localStorage.setItem(TOKEN_KEY, local_token);
-      return local_token;
+      storedToken = local_token;
     } else if (token) {
       localStorage.setItem(TOKEN_KEY, token);
-      return token;
+      storedToken = token;
     } else if (cloud_token) {
       localStorage.setItem(TOKEN_KEY, cloud_token);
-      return cloud_token;
+      storedToken = cloud_token;
     }
-    return "";
+
+    console.log("[auth] Stored token:", storedToken);
+    console.log(
+      "[auth] Token in localStorage:",
+      localStorage.getItem(TOKEN_KEY)
+    );
+
+    return storedToken;
   } catch (error: any) {
     let message = "Login failed. Please try again.";
     if (error.response && error.response.data) {
@@ -147,9 +159,13 @@ export const registerUser = async (
 
 export const createAxiosInstanceWithToken = () => {
   const token = localStorage.getItem(TOKEN_KEY);
+  console.log("[auth] Creating axios instance with token:", token);
+  const headers = token ? { Authorization: `Token ${token}` } : {};
+  console.log("[auth] Request headers:", headers);
+
   return axios.create({
     baseURL: API_BASE_URL,
-    headers: token ? { Authorization: `Token ${token}` } : {},
+    headers,
   });
 };
 
